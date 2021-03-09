@@ -1,6 +1,6 @@
 # Recurrent Attention Model for Face Recognition
 
-This repository contains code for a Deep Recurrent Attention Model (Volodymyr Mnih, Nicolas Heess, Alex Graves, et al. “Recurrent Models of Visual At-tention”) on the Extended Yale Face Database B
+This repository contains code for a Deep Recurrent Attention Model (Volodymyr Mnih, Nicolas Heess, Alex Graves, et al. “Recurrent Models of Visual Attention”) on the Extended Yale Face Database B
 
 Implementation using TensorFlow 1.14.
 
