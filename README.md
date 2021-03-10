@@ -4,6 +4,11 @@ This repository contains code for a Deep Recurrent Attention Model (Volodymyr Mn
 
 Implementation using TensorFlow 1.14.
 
+# Usage
+
+To build model and initiate training/testing, run DRAM.py with python. Ensure TensorFlow version is TensorFlow 1.14.
+
+python DRAM.py
 
 # Resources
 
