@@ -1,0 +1,19 @@
+Link to Numpy Files : https://drive.google.com/drive/folders/1tZSEGsA_GwlFl32JCHGR2GpZvqEEsxe_?usp=sharing
+
+Image dimensions = 480 x 640
+Labels = [0,1,2.....27] denoting 28 different classes
+
+Training.npy = (7056, 480, 640)
+Training_class.npy = (7056, 28)
+
+Testing.npy = (1009, 480, 640)
+Testing_class.npy = (1009, 28)
+
+Validation.npy = (1764, 480, 640)
+Validation_class.npy = (1764, 28)
+
+Note : Other files in the drive are subsets of the above files with lesser number of datapoints.
+
+
+
+
