@@ -11,11 +11,10 @@ class Config(object):
 
     # Dataset details:
     batch_size = 100
-    height = 28
-    width = 28
+    height = 640
+    width = 480
     color_channels = 1
-    object_labels = ('0', '1', '2', '3', '4',
-                     '5', '6', '7', '8', '9')
+    object_labels = ('0','1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27')
     num_classes = len(object_labels)
 
     # Glimpse extraction parameters
@@ -56,17 +55,17 @@ class Config(object):
     reward_weight = 5
 
     # Dataset details
-    data_path = 'data/mnist/'
+    data_path = 'data/yaleb/'
 
     # Saver/Writer details
-    checkpoint_path = 'checkpoints/mnist/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
-    checkpoint_name = 'DRAM-mnist'
+    checkpoint_path = 'checkpoints/yaleb/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
+    checkpoint_name = 'DRAM-yale'
     report_step = 50
-    graphs_path = 'graphs/mnist/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
+    graphs_path = 'graphs/yaleb/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
 
    # Visualizer details
     isVisualize = True
     isAnimate = True
     visualize_step = 550
     verbose = 5 # Adjusts how many images to display for plot
-    image_dir_name = 'images/mnist/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
+    image_dir_name = 'images/yaleb/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
