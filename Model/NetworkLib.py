@@ -15,7 +15,7 @@ class GlimpseNet(object):
 
     def extract_glimpse(self, location, glimpse_size):
         location = tf.stop_gradient(location)
-        with tf.compat.v1.name_scope("glimpse_sensor"):
+        with tf.name_scope("glimpse_sensor"):
             glimpse = tf.image.extract_glimpse(self.input_img, 
                                      [glimpse_size, glimpse_size],
                                      location, centered=True, normalized=True,
@@ -57,7 +57,7 @@ class GlimpseNet(object):
                                                    kernel_size=self.config.kernel_size2, strides=self.config.strides,
                                                    padding='SAME', name='conv2')
                     
-                    conv2 = tf.compat.v1.layers.batch_normalization(conv2, training=True)
+                    conv2 = tf.layers.batch_normalization(conv2, training=True)
 
                     conv3 = self.layers.conv_layer(conv2, filters=self.config.conv_3_filters, 
                                                    kernel_size=self.config.kernel_size3, strides=self.config.strides,
@@ -67,7 +67,7 @@ class GlimpseNet(object):
                     flattened_dim = conv3.shape[1] * conv3.shape[2] * conv3.shape[3]
                     flattened = tf.reshape(conv3, [-1, flattened_dim], name='flatten') 
                     fc = self.layers.fully_connected(flattened, self.config.feature_vector_size, 'fc_image')
-                    fc = tf.compat.v1.layers.batch_normalization(fc, trainable=True)
+                    fc = tf.layers.batch_normalization(fc, trainable=True)
                     image_vector = tf.compat.v1.nn.relu(fc) 
             
             # Calculate location vector
@@ -96,7 +96,7 @@ class LocationNet(object):
         """
         with tf.compat.v1.variable_scope("emission_network", reuse=tf.compat.v1.AUTO_REUSE):
             mean = tf.stop_gradient(tf.clip_by_value(self.layers.fully_connected(vector, self.loc_net_dim, "loc_fc"), -1, 1))
-            loc = mean + tf.random.normal((tf.shape(input=vector)[0], 2), stddev= self.location_stddev)
+            loc = mean + tf.random.normal((tf.shape(vector)[0], 2), stddev= self.location_stddev)
             loc = tf.stop_gradient(loc)
         return loc, mean
 
@@ -159,7 +159,7 @@ class ContextNet(object):
         initial state of the second LSTM layer.
         """
         with tf.compat.v1.variable_scope("context_network", reuse=tf.compat.v1.AUTO_REUSE):
-            self.coarse_image = tf.image.resize(input_img, 
+            self.coarse_image = tf.image.resize_images(input_img, 
                                                        [self.config.coarse_size, self.config.coarse_size], name='resize')
                                                        
             conv1 = self.layers.conv_layer(self.coarse_image, filters=self.config.first_conv_filters, kernel_size=self.config.kernel_size1, 
