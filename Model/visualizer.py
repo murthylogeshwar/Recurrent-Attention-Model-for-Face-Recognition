@@ -95,4 +95,3 @@ def plot_glimpse(config, images, locations, preds, labels, step, animate):
 
 def create_bbox(xy, width, height, color='green', linewidth=1.5, alpha=1):
     return patches.Rectangle(xy, width, height, fill=False, edgecolor=color, linewidth=linewidth, alpha=alpha)
-
