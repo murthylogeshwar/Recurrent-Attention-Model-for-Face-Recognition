@@ -1,8 +1,8 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
 import time
+import numpy as np
 
 import utils
 import datasets
@@ -21,23 +21,25 @@ class DRAM(object):
         self.isTraining = self.config.isTraining
         self.isVisualize = self.config.isVisualize
         self.isAnimate = self.config.isAnimate
-        self.dataset = datasets.MNIST(self.config)
+        self.dataset = datasets.yaleb(self.config)
 
     def get_data(self):
         """
         Get dataset and create iterators for test and train.
         """
-        with tf.compat.v1.name_scope('data'):
+        with tf.name_scope('data'):
             train_dataset, test_dataset = self.dataset.get_dataset()
+        
             iterator = tf.compat.v1.data.Iterator.from_structure(tf.compat.v1.data.get_output_types(train_dataset),
                                                                  tf.compat.v1.data.get_output_shapes(train_dataset))
-
+            img, self.label = iterator.get_next()
+         
+            self.img = tf.reshape(img, [-1, self.config.height, self.config.width, self.config.color_channels])
             self.train_init = iterator.make_initializer(train_dataset)
             self.test_init = iterator.make_initializer(test_dataset)
-            img, self.label = iterator.get_next()
-            self.img = tf.reshape(img, [-1, self.config.height, self.config.width, self.config.color_channels])
-            # self.train_init = iterator.make_initializer(train_dataset)
-            # self.test_init = iterator.make_initializer(test_dataset)
+            # print(tf.shape(test_dataset))
+            # print(tf.shape(train_dataset))
+
 
     def model_init(self):
         """
@@ -58,7 +60,7 @@ class DRAM(object):
 
         self.rnn = RecurrentNet(self.config, self.ln, self.gn, self.class_net)
 
-        self.LSTM_cell = tf.compat.v1.nn.rnn_cell.LSTMCell(self.config.cell_size, state_is_tuple=True, activation=tf.nn.tanh, forget_bias=1.)
+        self.LSTM_cell = tf.nn.rnn_cell.LSTMCell(self.config.cell_size, state_is_tuple=True, activation=tf.nn.tanh, forget_bias=1.)
 
     def inference(self):
         """
@@ -76,8 +78,21 @@ class DRAM(object):
 
         # self.state_init_input = self.context_net(self.img)
         # self.init_location, _ = self.ln(self.state_init_input) # gets initial location using context vector
+        
+        temp_1=np.zeros((self.batch_size, 2), dtype= float)
 
-        self.init_location = tf.zeros([self.batch_size, 2], dtype=tf.float32)
+        for i in range(len(temp_1)):
+            
+            # temp_1[i][0]=0.7
+            # temp_1[i][1]=0.9
+            
+            temp_1[i][0]=1
+            temp_1[i][1]=1
+            
+        temp_1 = tf.convert_to_tensor(temp_1, dtype=tf.float32)
+        
+        self.init_location = temp_1
+        # self.init_location = tf.zeros([self.batch_size, 2], dtype=tf.float32)
         self.loc_array = [self.init_location]
         self.mean_loc_array = [self.init_location]
 
@@ -92,9 +107,9 @@ class DRAM(object):
             self.sampled_locations = tf.concat(self.loc_array, axis=0)
             self.mean_locations = tf.concat(self.mean_loc_array, axis=0)
             self.sampled_locations = tf.reshape(self.sampled_locations, (self.config.num_glimpses, self.batch_size, 2))
-            self.sampled_locations = tf.transpose(a=self.sampled_locations, perm=[1, 0, 2])
+            self.sampled_locations = tf.transpose(self.sampled_locations, [1, 0, 2])
             self.mean_locations = tf.reshape(self.mean_locations, (self.config.num_glimpses, self.batch_size, 2))
-            self.mean_locations = tf.transpose(a=self.mean_locations, perm=[1, 0, 2])
+            self.mean_locations = tf.transpose(self.mean_locations, [1, 0, 2])
 
         self.baselines = []
         with tf.compat.v1.name_scope('baseline'):
@@ -104,46 +119,46 @@ class DRAM(object):
                 self.baselines.append(baseline_t)
             
             self.baselines = tf.stack(self.baselines)
-            self.baselines = tf.transpose(a=self.baselines) # shape is [batch_size, time_steps]
+            self.baselines = tf.transpose(self.baselines) # shape is [batch_size, time_steps]
 
     def loglikelihood(self):
-        with tf.compat.v1.name_scope("loglikelihood"):
+        with tf.name_scope("loglikelihood"):
             stddev = self.config.stddev
             mean = tf.stack(self.mean_loc_array)
             sampled = tf.stack(self.loc_array)
             gaussian = tf.compat.v1.distributions.Normal(mean, stddev)
             logll = gaussian.log_prob(sampled)
-            logll = tf.reduce_sum(input_tensor=logll, axis=2)
-            logll = tf.transpose(a=logll)
+            logll = tf.reduce_sum(logll, 2)
+            logll = tf.transpose(logll)
         return logll
 
     def loss(self):
-        with tf.compat.v1.name_scope("loss"):
+        with tf.name_scope("loss"):
             # Cross entropy
-            entropy = tf.nn.softmax_cross_entropy_with_logits(labels=self.label, logits=self.logits)
-            self.cross_ent = tf.reduce_mean(input_tensor=entropy, name='cross_ent')
+            entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=self.label, logits=self.logits)
+            self.cross_ent = tf.reduce_mean(entropy, name='cross_ent')
 
             # Baseline MSE
             self.preds = tf.nn.softmax(self.logits)
-            correct_preds = tf.equal(tf.argmax(input=self.preds, axis=1), tf.argmax(input=self.label, axis=1))
+            correct_preds = tf.equal(tf.argmax(self.preds, 1), tf.argmax(self.label, 1))
             self.rewards = tf.cast(correct_preds, tf.float32)
 
             # Reshape to match baseline
             self.rewards = tf.expand_dims(self.rewards, 1) # shape [batch_size, 1]
             self.rewards = tf.tile(self.rewards, [1, self.config.num_glimpses])
 
-            self.baseline_mse = tf.reduce_mean(input_tensor=tf.square(self.rewards - self.baselines), name='baseline_mse')
+            self.baseline_mse = tf.reduce_mean(tf.square(self.rewards - self.baselines), name='baseline_mse')
 
             # Loglikelihood
             self.logll = self.loglikelihood()
             self.baseline_term = self.rewards - tf.stop_gradient(self.baselines)
-            self.logllratio = tf.reduce_mean(input_tensor=self.logll * self.baseline_term, name='loglikelihood_ratio')
+            self.logllratio = tf.reduce_mean(self.logll * self.baseline_term, name='loglikelihood_ratio')
  
             # Total Loss
             self.hybrid_loss = -self.logllratio * self.config.reward_weight + self.cross_ent + self.baseline_mse
 
     def optimize(self):
-        with tf.compat.v1.name_scope('optimize'):
+        with tf.name_scope('optimize'):
             optimizer = tf.compat.v1.train.AdamOptimizer(self.config.lr)
             gradients, variables = zip(*optimizer.compute_gradients(self.hybrid_loss))
             gradients, _ = tf.clip_by_global_norm(gradients, self.config.max_global_norm)
@@ -165,13 +180,13 @@ class DRAM(object):
         """
         Count number of correct predictions per batch.
         """
-        with tf.compat.v1.name_scope("predict"):
+        with tf.name_scope("predict"):
             preds = tf.nn.softmax(self.logits)
-            correct_preds = tf.equal(tf.argmax(input=preds, axis=1), tf.argmax(input=self.label, axis=1))
-            self.accuracy = tf.reduce_mean(input_tensor=tf.cast(correct_preds, tf.float32))
+            correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(self.label, 1))
+            self.accuracy = tf.reduce_mean(tf.cast(correct_preds, tf.float32))
     
     def summaries(self):
-        with tf.compat.v1.name_scope("summaries"):
+        with tf.name_scope("summaries"):
             tf.compat.v1.summary.scalar('cross_entropy', self.cross_ent)
             tf.compat.v1.summary.scalar('baseline_mse', self.baseline_mse)
             tf.compat.v1.summary.scalar('loglikelihood', self.logllratio)
