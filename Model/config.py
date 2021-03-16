@@ -4,22 +4,22 @@ class Config(object):
     """
     # Training parameters
     lr = 0.01
-    num_epochs = 5
+    num_epochs = 1
     max_global_norm = 5.0
     isTraining = True
     
 
     # Dataset details:
-    batch_size = 100
+    batch_size = 10
     height = 640
     width = 480
     color_channels = 1
-    object_labels = ('0','1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27')
+    object_labels = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27')
     num_classes = len(object_labels)
 
     # Glimpse extraction parameters
     num_glimpses = 5
-    glimpse_size = 8
+    glimpse_size = 160
     glimpse_scale = 2
     num_patches = 2
 
@@ -59,13 +59,13 @@ class Config(object):
 
     # Saver/Writer details
     checkpoint_path = 'checkpoints/yaleb/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
-    checkpoint_name = 'DRAM-yale'
-    report_step = 50
+    checkpoint_name = 'DRAM-yaleb'
+    report_step = 5
     graphs_path = 'graphs/yaleb/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
 
    # Visualizer details
     isVisualize = True
     isAnimate = True
-    visualize_step = 550
+    visualize_step = 5
     verbose = 5 # Adjusts how many images to display for plot
     image_dir_name = 'images/yaleb/lr={}n_glimpse={}glimpse_size{}n_patch={}/'.format(lr, num_glimpses, glimpse_size, num_patches)
